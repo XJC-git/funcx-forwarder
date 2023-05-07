@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import sys
+import threading
 import time
 from multiprocessing import Queue
 
@@ -241,7 +242,8 @@ def cli_run():
         logging_level=logging_level,
         redis_port=args.redisport,
     )
-    fw.start()
+    # fw.run()
+    threading.Thread(target=fw.run).start()
     app.config["forwarder_process"] = fw
 
     # Run a test command to make sure the forwarder is online

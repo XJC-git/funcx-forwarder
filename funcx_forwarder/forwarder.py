@@ -268,7 +268,7 @@ class Forwarder(Process):
         )
 
         self.update_endpoint_metadata(endpoint_id, endpoint_address)
-
+        # self.add_subscriber(endpoint_id)
         self.tasks_q.add_client_key(endpoint_id, key)
         self.results_q.add_client_key(endpoint_id, key)
         self.commands_q.add_client_key(endpoint_id, key)
@@ -277,12 +277,14 @@ class Forwarder(Process):
     def update_endpoint_metadata(self, endpoint_id, endpoint_address):
         """Geo locate the endpoint and push as metadata into redis"""
         try:
-            resp = requests.get(f"http://ipinfo.io/{endpoint_address}/json")
-            self.endpoint_db.set_endpoint_metadata(endpoint_id, resp.json())
-        except Exception:
+            pass
+            # resp = requests.get(f"http://ipinfo.io/8.8.8.8/json")
+            # self.endpoint_db.set_endpoint_metadata(endpoint_id, resp.json())
+        except Exception as e:
+            logger.error(e)
             logger.error(f"Failed to geo locate {endpoint_address}")
-        else:
-            logger.info(f"Endpoint with {endpoint_address} is at {resp}")
+        # else:
+        #     logger.info(f"Endpoint with {endpoint_address} is at {resp}")
 
     def initialize_endpoint_queues(self):
         """Initialize the three queues over which the forwarder communicates with endpoints
@@ -423,6 +425,7 @@ class Forwarder(Process):
         # Now wait for any messages on REDIS that needs forwarding.
         task = None
         try:
+            # logger.info("Redis subscribed?{}".format(self.redis_pubsub.subscribed))
             dest_endpoint, task_id = self.redis_pubsub.get(timeout=0)
             task = RedisTask(self.redis_client, task_id)
             logger.debug(
